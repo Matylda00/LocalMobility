@@ -18,7 +18,7 @@
 
 **Nazwa projektu:** LocalMobility: Transport i Parkingi
 
-**Link do repozytorium (np. GitHub):** [Zostanie przesłane później.](https://github.com/Matylda00/LocalMobility.git)
+**Link do repozytorium (np. GitHub):** https://github.com/Matylda00/LocalMobility.git
 
 ---
 
