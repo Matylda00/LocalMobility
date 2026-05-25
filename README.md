@@ -55,7 +55,7 @@ Określ priorytety funkcji aplikacji:
 
 ## 4. Wymagania Niefunkcjonalne
 
-Hasła będą hashowane za pomocą prostego algorytmu. Nawigacja za pomocą myszki, obsługa w przeglądarce tylko na komputerze.
+Hasła będą hashowane za pomocą prostego algorytmu (BCrypt) . Nawigacja za pomocą myszki, obsługa w przeglądarce tylko na komputerze.
 
 ---
 
@@ -69,8 +69,6 @@ Hasła będą hashowane za pomocą prostego algorytmu. Nawigacja za pomocą mysz
 
 - Baza danych: [np. PostgreSQL, MongoDB]  
   PostgreSQL
-
-- Inne: [np. Docker, Mapbox API, Stripe]
 
 ---
 
