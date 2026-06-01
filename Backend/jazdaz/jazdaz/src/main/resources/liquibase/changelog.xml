@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+            http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="001-create-city-transport-database" author="lucja">
+
+        <createTable tableName="users">
+            <column name="id" type="BIGINT">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="first_name" type="VARCHAR(100)"/>
+            <column name="last_name" type="VARCHAR(100)"/>
+            <column name="email" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="password_hash" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="role" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+
+        <createTable tableName="bus_lines">
+            <column name="id" type="BIGINT">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="line_number" type="VARCHAR(20)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="name" type="VARCHAR(100)"/>
+            <column name="start_stop" type="VARCHAR(100)"/>
+            <column name="end_stop" type="VARCHAR(100)"/>
+        </createTable>
+
+        <createTable tableName="buses">
+            <column name="id" type="BIGINT">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="bus_number" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="line_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="current_latitude" type="DECIMAL(10,7)"/>
+            <column name="current_longitude" type="DECIMAL(10,7)"/>
+            <column name="last_updated" type="TIMESTAMP"/>
+        </createTable>
+
+        <createTable tableName="bus_stops">
+            <column name="id" type="BIGINT">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="latitude" type="DECIMAL(10,7)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="longitude" type="DECIMAL(10,7)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="schedules">
+            <column name="id" type="BIGINT">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="line_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="stop_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="departure_time" type="TIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="day_type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="ticket_types">
+            <column name="id" type="BIGINT">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="price" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="duration_minutes" type="INTEGER"/>
+            <column name="ticket_category" type="VARCHAR(50)"/>
+        </createTable>
+
+        <createTable tableName="tickets">
+            <column name="id" type="BIGINT">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ticket_type_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="purchase_date" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="valid_from" type="TIMESTAMP"/>
+            <column name="valid_to" type="TIMESTAMP"/>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="parking_lots">
+            <column name="id" type="BIGINT">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="address" type="VARCHAR(255)"/>
+            <column name="latitude" type="DECIMAL(10,7)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="longitude" type="DECIMAL(10,7)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total_spaces" type="INTEGER"/>
+            <column name="available_spaces" type="INTEGER"/>
+        </createTable>
+
+        <createTable tableName="parking_fees">
+            <column name="id" type="BIGINT">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="parking_lot_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="fee_name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="price" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="duration_minutes" type="INTEGER"/>
+        </createTable>
+
+        <createTable tableName="bike_stations">
+            <column name="id" type="BIGINT">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="latitude" type="DECIMAL(10,7)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="longitude" type="DECIMAL(10,7)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="available_bikes" type="INTEGER"/>
+            <column name="available_slots" type="INTEGER"/>
+        </createTable>
+
+        <createTable tableName="bikes">
+            <column name="id" type="BIGINT">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="bike_number" type="VARCHAR(50)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="station_id" type="BIGINT"/>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="bike_rentals">
+            <column name="id" type="BIGINT">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="bike_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="start_time" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="end_time" type="TIMESTAMP"/>
+            <column name="price" type="DECIMAL(10,2)"/>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="buses"
+                baseColumnNames="line_id"
+                referencedTableName="bus_lines"
+                referencedColumnNames="id"
+                constraintName="fk_buses_bus_lines"/>
+
+        <addForeignKeyConstraint
+                baseTableName="schedules"
+                baseColumnNames="line_id"
+                referencedTableName="bus_lines"
+                referencedColumnNames="id"
+                constraintName="fk_schedules_bus_lines"/>
+
+        <addForeignKeyConstraint
+                baseTableName="schedules"
+                baseColumnNames="stop_id"
+                referencedTableName="bus_stops"
+                referencedColumnNames="id"
+                constraintName="fk_schedules_bus_stops"/>
+
+        <addForeignKeyConstraint
+                baseTableName="tickets"
+                baseColumnNames="user_id"
+                referencedTableName="users"
+                referencedColumnNames="id"
+                constraintName="fk_tickets_users"/>
+
+        <addForeignKeyConstraint
+                baseTableName="tickets"
+                baseColumnNames="ticket_type_id"
+                referencedTableName="ticket_types"
+                referencedColumnNames="id"
+                constraintName="fk_tickets_ticket_types"/>
+
+        <addForeignKeyConstraint
+                baseTableName="parking_fees"
+                baseColumnNames="parking_lot_id"
+                referencedTableName="parking_lots"
+                referencedColumnNames="id"
+                constraintName="fk_parking_fees_parking_lots"/>
+
+        <addForeignKeyConstraint
+                baseTableName="bikes"
+                baseColumnNames="station_id"
+                referencedTableName="bike_stations"
+                referencedColumnNames="id"
+                constraintName="fk_bikes_bike_stations"/>
+
+        <addForeignKeyConstraint
+                baseTableName="bike_rentals"
+                baseColumnNames="user_id"
+                referencedTableName="users"
+                referencedColumnNames="id"
+                constraintName="fk_bike_rentals_users"/>
+
+        <addForeignKeyConstraint
+                baseTableName="bike_rentals"
+                baseColumnNames="bike_id"
+                referencedTableName="bikes"
+                referencedColumnNames="id"
+                constraintName="fk_bike_rentals_bikes"/>
+
+    </changeSet>
+
+</databaseChangeLog>
