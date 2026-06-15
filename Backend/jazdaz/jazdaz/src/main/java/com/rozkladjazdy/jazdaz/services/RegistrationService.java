@@ -22,7 +22,7 @@ public class RegistrationService {
     }
 
     public boolean register(RegisterRequestDto request) {
-        if (userRepository.findByEmail(request.email()).isEmpty()) {
+        if (userRepository.findByEmail(request.email()).isPresent()) {
             return false;
         }
 
