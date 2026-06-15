@@ -17,13 +17,12 @@ public class AuthController {
     }
 
     @PostMapping("/register")
+    @ResponseStatus(HttpStatus.CREATED)
     public void register(@RequestBody RegisterRequestDto request) {
         boolean isRegistered = registrationService.register(request);
 
-        if (isRegistered) {
-            throw new ResponseStatusException(HttpStatus.CREATED);
+        if (!isRegistered) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT);
         }
-
-        throw new ResponseStatusException(HttpStatus.CONFLICT);
     }
 }
