@@ -7,290 +7,181 @@
             http://www.liquibase.org/xml/ns/dbchangelog
             http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
-    <changeSet id="001-create-city-transport-database" author="lucja">
+    <changeSet id="001-create-users" author="lucja">
 
         <createTable tableName="users">
             <column name="id" type="BIGINT" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
+
             <column name="email" type="VARCHAR(255)">
                 <constraints nullable="false" unique="true"/>
             </column>
+
             <column name="password_hash" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
+
             <column name="role" type="VARCHAR(50)">
                 <constraints nullable="false"/>
             </column>
         </createTable>
 
+    </changeSet>
+
+
+    <changeSet id="002-create-bus-lines" author="lucja">
+
         <createTable tableName="bus_lines">
             <column name="id" type="BIGINT" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-            <column name="line_number" type="VARCHAR(20)">
+
+            <!-- route_id z routes.txt -->
+            <column name="external_id" type="VARCHAR(100)">
                 <constraints nullable="false" unique="true"/>
             </column>
-            <column name="name" type="VARCHAR(100)"/>
-            <column name="start_stop" type="VARCHAR(100)"/>
-            <column name="end_stop" type="VARCHAR(100)"/>
+
+            <!-- np. 105, 190, 520 -->
+            <column name="line_number" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- pełniejsza nazwa linii, opcjonalnie -->
+            <column name="name" type="VARCHAR(255)"/>
+
+            <!-- GTFS route_type, dla autobusu zwykle 3 -->
+            <column name="route_type" type="INTEGER"/>
         </createTable>
 
-        <createTable tableName="buses">
-            <column name="id" type="BIGINT" autoIncrement="true">
-                <constraints primaryKey="true" nullable="false"/>
-            </column>
-            <column name="bus_number" type="VARCHAR(50)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="line_id" type="BIGINT">
-                <constraints nullable="false"/>
-            </column>
-            <column name="current_latitude" type="DECIMAL(10,7)"/>
-            <column name="current_longitude" type="DECIMAL(10,7)"/>
-            <column name="last_updated" type="TIMESTAMP"/>
-        </createTable>
+    </changeSet>
+
+
+    <changeSet id="003-create-bus-stops" author="lucja">
 
         <createTable tableName="bus_stops">
             <column name="id" type="BIGINT" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-            <column name="name" type="VARCHAR(100)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="latitude" type="DECIMAL(10,7)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="longitude" type="DECIMAL(10,7)">
-                <constraints nullable="false"/>
-            </column>
-        </createTable>
 
-        <createTable tableName="schedules">
-            <column name="id" type="BIGINT" autoIncrement="true">
-                <constraints primaryKey="true" nullable="false"/>
-            </column>
-            <column name="line_id" type="BIGINT">
-                <constraints nullable="false"/>
-            </column>
-            <column name="stop_id" type="BIGINT">
-                <constraints nullable="false"/>
-            </column>
-            <column name="departure_time" type="TIME">
-                <constraints nullable="false"/>
-            </column>
-            <column name="day_type" type="VARCHAR(50)">
-                <constraints nullable="false"/>
-            </column>
-        </createTable>
-
-        <createTable tableName="ticket_types">
-            <column name="id" type="BIGINT" autoIncrement="true">
-                <constraints primaryKey="true" nullable="false"/>
-            </column>
-            <column name="name" type="VARCHAR(100)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="price" type="DECIMAL(10,2)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="duration_minutes" type="INTEGER"/>
-            <column name="ticket_category" type="VARCHAR(50)"/>
-        </createTable>
-
-        <createTable tableName="tickets">
-            <column name="id" type="BIGINT" autoIncrement="true">
-                <constraints primaryKey="true" nullable="false"/>
-            </column>
-            <column name="user_id" type="BIGINT">
-                <constraints nullable="false"/>
-            </column>
-            <column name="ticket_type_id" type="BIGINT">
-                <constraints nullable="false"/>
-            </column>
-            <column name="purchase_date" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
-            <column name="valid_from" type="TIMESTAMP"/>
-            <column name="valid_to" type="TIMESTAMP"/>
-            <column name="status" type="VARCHAR(50)">
-                <constraints nullable="false"/>
-            </column>
-        </createTable>
-
-        <createTable tableName="parking_lots">
-            <column name="id" type="BIGINT" autoIncrement="true">
-                <constraints primaryKey="true" nullable="false"/>
-            </column>
-            <column name="name" type="VARCHAR(100)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="address" type="VARCHAR(255)"/>
-            <column name="latitude" type="DECIMAL(10,7)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="longitude" type="DECIMAL(10,7)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="total_spaces" type="INTEGER"/>
-            <column name="available_spaces" type="INTEGER"/>
-        </createTable>
-
-        <createTable tableName="parking_fees">
-            <column name="id" type="BIGINT" autoIncrement="true">
-                <constraints primaryKey="true" nullable="false"/>
-            </column>
-            <column name="parking_lot_id" type="BIGINT">
-                <constraints nullable="false"/>
-            </column>
-            <column name="fee_name" type="VARCHAR(100)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="price" type="DECIMAL(10,2)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="duration_minutes" type="INTEGER"/>
-        </createTable>
-
-        <createTable tableName="bike_stations">
-            <column name="id" type="BIGINT" autoIncrement="true">
-                <constraints primaryKey="true" nullable="false"/>
-            </column>
-            <column name="name" type="VARCHAR(100)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="latitude" type="DECIMAL(10,7)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="longitude" type="DECIMAL(10,7)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="available_bikes" type="INTEGER"/>
-            <column name="available_slots" type="INTEGER"/>
-        </createTable>
-
-        <createTable tableName="bikes">
-            <column name="id" type="BIGINT" autoIncrement="true">
-                <constraints primaryKey="true" nullable="false"/>
-            </column>
-            <column name="bike_number" type="VARCHAR(50)">
+            <!-- stop_id z stops.txt -->
+            <column name="external_id" type="VARCHAR(100)">
                 <constraints nullable="false" unique="true"/>
             </column>
-            <column name="station_id" type="BIGINT"/>
-            <column name="status" type="VARCHAR(50)">
-                <constraints nullable="false"/>
-            </column>
-        </createTable>
 
-        <createTable tableName="bike_rentals">
-            <column name="id" type="BIGINT" autoIncrement="true">
-                <constraints primaryKey="true" nullable="false"/>
-            </column>
-            <column name="user_id" type="BIGINT">
-                <constraints nullable="false"/>
-            </column>
-            <column name="bike_id" type="BIGINT">
-                <constraints nullable="false"/>
-            </column>
-            <column name="start_time" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
-            <column name="end_time" type="TIMESTAMP"/>
-            <column name="price" type="DECIMAL(10,2)"/>
-            <column name="status" type="VARCHAR(50)">
-                <constraints nullable="false"/>
-            </column>
-        </createTable>
-
-        <addForeignKeyConstraint
-                baseTableName="buses"
-                baseColumnNames="line_id"
-                referencedTableName="bus_lines"
-                referencedColumnNames="id"
-                constraintName="fk_buses_bus_lines"/>
-
-        <addForeignKeyConstraint
-                baseTableName="schedules"
-                baseColumnNames="line_id"
-                referencedTableName="bus_lines"
-                referencedColumnNames="id"
-                constraintName="fk_schedules_bus_lines"/>
-
-        <addForeignKeyConstraint
-                baseTableName="schedules"
-                baseColumnNames="stop_id"
-                referencedTableName="bus_stops"
-                referencedColumnNames="id"
-                constraintName="fk_schedules_bus_stops"/>
-
-        <addForeignKeyConstraint
-                baseTableName="tickets"
-                baseColumnNames="user_id"
-                referencedTableName="users"
-                referencedColumnNames="id"
-                constraintName="fk_tickets_users"/>
-
-        <addForeignKeyConstraint
-                baseTableName="tickets"
-                baseColumnNames="ticket_type_id"
-                referencedTableName="ticket_types"
-                referencedColumnNames="id"
-                constraintName="fk_tickets_ticket_types"/>
-
-        <addForeignKeyConstraint
-                baseTableName="parking_fees"
-                baseColumnNames="parking_lot_id"
-                referencedTableName="parking_lots"
-                referencedColumnNames="id"
-                constraintName="fk_parking_fees_parking_lots"/>
-
-        <addForeignKeyConstraint
-                baseTableName="bikes"
-                baseColumnNames="station_id"
-                referencedTableName="bike_stations"
-                referencedColumnNames="id"
-                constraintName="fk_bikes_bike_stations"/>
-
-        <addForeignKeyConstraint
-                baseTableName="bike_rentals"
-                baseColumnNames="user_id"
-                referencedTableName="users"
-                referencedColumnNames="id"
-                constraintName="fk_bike_rentals_users"/>
-
-        <addForeignKeyConstraint
-                baseTableName="bike_rentals"
-                baseColumnNames="bike_id"
-                referencedTableName="bikes"
-                referencedColumnNames="id"
-                constraintName="fk_bike_rentals_bikes"/>
-
-    </changeSet>
-    <changeSet id="002-add-gtfs-fields-to-bus-lines" author="lucja">
-        <addColumn tableName="bus_lines">
-            <column name="external_id" type="VARCHAR(100)"/>
-            <column name="route_type" type="INT"/>
-        </addColumn>
-
-        <addUniqueConstraint
-                tableName="bus_lines"
-                columnNames="external_id"
-                constraintName="uk_bus_lines_external_id"/>
-    </changeSet>
-    <changeSet id="003-add-gtfs-fields-to-bus-stops" author="lucja">
-        <addColumn tableName="bus_stops">
-            <column name="external_id" type="VARCHAR(100)"/>
+            <!-- kod przystanku, jeżeli jest w GTFS -->
             <column name="stop_code" type="VARCHAR(50)"/>
-            <column name="platform_code" type="VARCHAR(50)"/>
-        </addColumn>
 
-        <addUniqueConstraint
-                tableName="bus_stops"
-                columnNames="external_id"
-                constraintName="uk_bus_stops_external_id"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="latitude" type="DECIMAL(10,7)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="longitude" type="DECIMAL(10,7)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- opcjonalne, przydatne w Warszawie dla słupków/peronów -->
+            <column name="platform_code" type="VARCHAR(50)"/>
+        </createTable>
+
     </changeSet>
-    <changeSet id="004-create-bus-routes" author="lucja">
-        <createTable tableName="bus_routes">
+
+
+    <changeSet id="004-create-bus-service-calendars" author="lucja">
+
+        <createTable tableName="bus_service_calendars">
             <column name="id" type="BIGINT" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
 
+            <!-- service_id z calendar.txt / calendar_dates.txt -->
+            <column name="service_id" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+
+            <column name="monday" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="tuesday" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="wednesday" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="thursday" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="friday" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="saturday" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="sunday" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="start_date" type="DATE"/>
+            <column name="end_date" type="DATE"/>
+        </createTable>
+
+    </changeSet>
+
+
+    <changeSet id="005-create-bus-service-calendar-dates" author="lucja">
+
+        <createTable tableName="bus_service_calendar_dates">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="service_calendar_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- 1 = dodany kurs, 2 = usunięty kurs -->
+            <column name="exception_type" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="bus_service_calendar_dates"
+                baseColumnNames="service_calendar_id"
+                referencedTableName="bus_service_calendars"
+                referencedColumnNames="id"
+                constraintName="fk_calendar_dates_calendar"/>
+
+        <addUniqueConstraint
+                tableName="bus_service_calendar_dates"
+                columnNames="service_calendar_id, date"
+                constraintName="uk_calendar_dates_service_date"/>
+
+    </changeSet>
+
+
+    <changeSet id="006-create-bus-trips" author="lucja">
+
+        <createTable tableName="bus_trips">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <!-- trip_id z trips.txt -->
             <column name="external_id" type="VARCHAR(255)">
                 <constraints nullable="false" unique="true"/>
             </column>
@@ -299,21 +190,42 @@
                 <constraints nullable="false"/>
             </column>
 
-            <column name="direction_id" type="INTEGER"/>
+            <column name="service_calendar_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
 
+            <!-- kierunek, np. krańcowy przystanek -->
             <column name="headsign" type="VARCHAR(255)"/>
 
-            <column name="shape_id" type="VARCHAR(255)"/>
-
-            <column name="gtfs_trip_id" type="VARCHAR(255)"/>
+            <!-- 0 / 1, kierunek jazdy -->
+            <column name="direction_id" type="INTEGER"/>
         </createTable>
 
-        <createTable tableName="bus_route_stops">
+        <addForeignKeyConstraint
+                baseTableName="bus_trips"
+                baseColumnNames="line_id"
+                referencedTableName="bus_lines"
+                referencedColumnNames="id"
+                constraintName="fk_bus_trips_bus_lines"/>
+
+        <addForeignKeyConstraint
+                baseTableName="bus_trips"
+                baseColumnNames="service_calendar_id"
+                referencedTableName="bus_service_calendars"
+                referencedColumnNames="id"
+                constraintName="fk_bus_trips_calendar"/>
+
+    </changeSet>
+
+
+    <changeSet id="007-create-bus-stop-times" author="lucja">
+
+        <createTable tableName="bus_stop_times">
             <column name="id" type="BIGINT" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
 
-            <column name="route_id" type="BIGINT">
+            <column name="trip_id" type="BIGINT">
                 <constraints nullable="false"/>
             </column>
 
@@ -321,36 +233,83 @@
                 <constraints nullable="false"/>
             </column>
 
+            <!-- kolejność przystanku na trasie -->
             <column name="stop_sequence" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- jako tekst, bo GTFS może mieć godziny ponad 24:00:00 -->
+            <column name="arrival_time" type="VARCHAR(16)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="departure_time" type="VARCHAR(16)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- pomocniczo do sortowania i wyszukiwania -->
+            <column name="arrival_seconds" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="departure_seconds" type="INTEGER">
                 <constraints nullable="false"/>
             </column>
         </createTable>
 
         <addForeignKeyConstraint
-                baseTableName="bus_routes"
-                baseColumnNames="line_id"
-                referencedTableName="bus_lines"
+                baseTableName="bus_stop_times"
+                baseColumnNames="trip_id"
+                referencedTableName="bus_trips"
                 referencedColumnNames="id"
-                constraintName="fk_bus_routes_bus_lines"/>
+                constraintName="fk_bus_stop_times_trips"/>
 
         <addForeignKeyConstraint
-                baseTableName="bus_route_stops"
-                baseColumnNames="route_id"
-                referencedTableName="bus_routes"
-                referencedColumnNames="id"
-                constraintName="fk_bus_route_stops_bus_routes"/>
-
-        <addForeignKeyConstraint
-                baseTableName="bus_route_stops"
+                baseTableName="bus_stop_times"
                 baseColumnNames="stop_id"
                 referencedTableName="bus_stops"
                 referencedColumnNames="id"
-                constraintName="fk_bus_route_stops_bus_stops"/>
+                constraintName="fk_bus_stop_times_stops"/>
 
         <addUniqueConstraint
-                tableName="bus_route_stops"
-                columnNames="route_id, stop_sequence"
-                constraintName="uk_bus_route_stop_sequence"/>
+                tableName="bus_stop_times"
+                columnNames="trip_id, stop_sequence"
+                constraintName="uk_bus_stop_times_trip_sequence"/>
+
+    </changeSet>
+
+
+    <changeSet id="008-create-indexes" author="lucja">
+
+        <createIndex tableName="bus_lines" indexName="idx_bus_lines_line_number">
+            <column name="line_number"/>
+        </createIndex>
+
+        <createIndex tableName="bus_stops" indexName="idx_bus_stops_name">
+            <column name="name"/>
+        </createIndex>
+
+        <createIndex tableName="bus_trips" indexName="idx_bus_trips_line_id">
+            <column name="line_id"/>
+        </createIndex>
+
+        <createIndex tableName="bus_trips" indexName="idx_bus_trips_calendar_id">
+            <column name="service_calendar_id"/>
+        </createIndex>
+
+        <createIndex tableName="bus_stop_times" indexName="idx_bus_stop_times_stop_id">
+            <column name="stop_id"/>
+        </createIndex>
+
+        <createIndex tableName="bus_stop_times" indexName="idx_bus_stop_times_trip_id">
+            <column name="trip_id"/>
+        </createIndex>
+
+        <createIndex tableName="bus_stop_times" indexName="idx_bus_stop_times_departure_seconds">
+            <column name="departure_seconds"/>
+        </createIndex>
+
+
     </changeSet>
 
 </databaseChangeLog>

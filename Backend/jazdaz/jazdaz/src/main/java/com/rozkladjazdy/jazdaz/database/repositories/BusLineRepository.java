@@ -1,17 +1,18 @@
 package com.rozkladjazdy.jazdaz.database.repositories;
 
-import com.rozkladjazdy.jazdaz.database.entities.BusLineEntity;
+
+import com.rozkladjazdy.jazdaz.database.entities.BusLine;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
-
 @Repository
-public interface BusLineRepository extends JpaRepository<BusLineEntity, Long> {
+public interface BusLineRepository extends JpaRepository<BusLine, Long> {
 
-    Optional<BusLineEntity> findByLineNumber(String lineNumber);
+    Optional<BusLine> findByLineNumber(String lineNumber);
 
     boolean existsByLineNumber(String lineNumber);
 
-    Optional<BusLineEntity> findByExternalId(String routeId);
+    List<BusLine> findAll();
 }

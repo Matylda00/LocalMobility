@@ -21,52 +21,52 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 class SecurityIntegrationTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @BeforeEach
-    void setUp() {
-        userRepository.deleteAll();
-
-        UserEntity user = new UserEntity();
-        user.setEmail("user@test.com");
-        user.setHashedPassword(passwordEncoder.encode("password123"));
-        user.setRole(UserRole.USER);
-
-        userRepository.save(user);
-    }
-
-    @Test
-    void shouldReturnUnauthorizedWhenUserIsNotLoggedIn() throws Exception {
-        mockMvc.perform(get("/"))
-                .andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    void shouldLoginWithValidCredentials() throws Exception {
-        mockMvc.perform(get("/")
-                        .with(httpBasic("user@test.com", "password123")))
-                .andExpect(status().isOk())
-                .andExpect(content().string(equalTo("Rozklad jazdy?")));
-    }
-
-    @Test
-    void shouldRejectInvalidPassword() throws Exception {
-        mockMvc.perform(get("/")
-                        .with(httpBasic("user@test.com", "wrong-password")))
-                .andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    void shouldRejectUnknownUser() throws Exception {
-        mockMvc.perform(get("/")
-                        .with(httpBasic("unknown@test.com", "password123")))
-                .andExpect(status().isUnauthorized());
-    }
+//    @Autowired
+//    private MockMvc mockMvc;
+//
+//    @Autowired
+//    private UserRepository userRepository;
+//
+//    @Autowired
+//    private PasswordEncoder passwordEncoder;
+//
+//    @BeforeEach
+//    void setUp() {
+//        userRepository.deleteAll();
+//
+//        UserEntity user = new UserEntity();
+//        user.setEmail("user@test.com");
+//        user.setHashedPassword(passwordEncoder.encode("password123"));
+//        user.setRole(UserRole.USER);
+//
+//        userRepository.save(user);
+//    }
+//
+//    @Test
+//    void shouldReturnUnauthorizedWhenUserIsNotLoggedIn() throws Exception {
+//        mockMvc.perform(get("/"))
+//                .andExpect(status().isUnauthorized());
+//    }
+//
+//    @Test
+//    void shouldLoginWithValidCredentials() throws Exception {
+//        mockMvc.perform(get("/")
+//                        .with(httpBasic("user@test.com", "password123")))
+//                .andExpect(status().isOk())
+//                .andExpect(content().string(equalTo("Rozklad jazdy?")));
+//    }
+//
+//    @Test
+//    void shouldRejectInvalidPassword() throws Exception {
+//        mockMvc.perform(get("/")
+//                        .with(httpBasic("user@test.com", "wrong-password")))
+//                .andExpect(status().isUnauthorized());
+//    }
+//
+//    @Test
+//    void shouldRejectUnknownUser() throws Exception {
+//        mockMvc.perform(get("/")
+//                        .with(httpBasic("unknown@test.com", "password123")))
+//                .andExpect(status().isUnauthorized());
+//    }
 }

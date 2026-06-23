@@ -6,20 +6,19 @@ import java.math.BigDecimal;
 
 @Entity
 @Table(name = "bus_stops")
-public class BusStopEntity {
+public class BusStop {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    private long id;
+    private Long id;
 
-    @Column(name = "external_id", unique = true, length = 100)
+    @Column(name = "external_id", nullable = false, unique = true)
     private String externalId;
 
-    @Column(name = "stop_code", length = 50)
+    @Column(name = "stop_code")
     private String stopCode;
 
-    @Column(name = "name", nullable = false, length = 255)
+    @Column(name = "name", nullable = false)
     private String name;
 
     @Column(name = "latitude", nullable = false, precision = 10, scale = 7)
@@ -28,13 +27,10 @@ public class BusStopEntity {
     @Column(name = "longitude", nullable = false, precision = 10, scale = 7)
     private BigDecimal longitude;
 
-    @Column(name = "platform_code", length = 50)
+    @Column(name = "platform_code")
     private String platformCode;
 
-    public BusStopEntity() {
-    }
-
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
@@ -42,44 +38,48 @@ public class BusStopEntity {
         return externalId;
     }
 
-    public void setExternalId(String externalId) {
-        this.externalId = externalId;
-    }
-
     public String getStopCode() {
         return stopCode;
-    }
-
-    public void setStopCode(String stopCode) {
-        this.stopCode = stopCode;
     }
 
     public String getName() {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public BigDecimal getLatitude() {
         return latitude;
-    }
-
-    public void setLatitude(BigDecimal latitude) {
-        this.latitude = latitude;
     }
 
     public BigDecimal getLongitude() {
         return longitude;
     }
 
-    public void setLongitude(BigDecimal longitude) {
-        this.longitude = longitude;
-    }
-
     public String getPlatformCode() {
         return platformCode;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setExternalId(String externalId) {
+        this.externalId = externalId;
+    }
+
+    public void setStopCode(String stopCode) {
+        this.stopCode = stopCode;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setLatitude(BigDecimal latitude) {
+        this.latitude = latitude;
+    }
+
+    public void setLongitude(BigDecimal longitude) {
+        this.longitude = longitude;
     }
 
     public void setPlatformCode(String platformCode) {
