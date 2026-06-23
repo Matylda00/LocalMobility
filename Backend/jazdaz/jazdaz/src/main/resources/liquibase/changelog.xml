@@ -262,5 +262,95 @@
                 constraintName="fk_bike_rentals_bikes"/>
 
     </changeSet>
+    <changeSet id="002-add-gtfs-fields-to-bus-lines" author="lucja">
+        <addColumn tableName="bus_lines">
+            <column name="external_id" type="VARCHAR(100)"/>
+            <column name="route_type" type="INT"/>
+        </addColumn>
+
+        <addUniqueConstraint
+                tableName="bus_lines"
+                columnNames="external_id"
+                constraintName="uk_bus_lines_external_id"/>
+    </changeSet>
+    <changeSet id="003-add-gtfs-fields-to-bus-stops" author="lucja">
+        <addColumn tableName="bus_stops">
+            <column name="external_id" type="VARCHAR(100)"/>
+            <column name="stop_code" type="VARCHAR(50)"/>
+            <column name="platform_code" type="VARCHAR(50)"/>
+        </addColumn>
+
+        <addUniqueConstraint
+                tableName="bus_stops"
+                columnNames="external_id"
+                constraintName="uk_bus_stops_external_id"/>
+    </changeSet>
+    <changeSet id="004-create-bus-routes" author="lucja">
+        <createTable tableName="bus_routes">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="external_id" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+
+            <column name="line_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="direction_id" type="INTEGER"/>
+
+            <column name="headsign" type="VARCHAR(255)"/>
+
+            <column name="shape_id" type="VARCHAR(255)"/>
+
+            <column name="gtfs_trip_id" type="VARCHAR(255)"/>
+        </createTable>
+
+        <createTable tableName="bus_route_stops">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="route_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="stop_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="stop_sequence" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="bus_routes"
+                baseColumnNames="line_id"
+                referencedTableName="bus_lines"
+                referencedColumnNames="id"
+                constraintName="fk_bus_routes_bus_lines"/>
+
+        <addForeignKeyConstraint
+                baseTableName="bus_route_stops"
+                baseColumnNames="route_id"
+                referencedTableName="bus_routes"
+                referencedColumnNames="id"
+                constraintName="fk_bus_route_stops_bus_routes"/>
+
+        <addForeignKeyConstraint
+                baseTableName="bus_route_stops"
+                baseColumnNames="stop_id"
+                referencedTableName="bus_stops"
+                referencedColumnNames="id"
+                constraintName="fk_bus_route_stops_bus_stops"/>
+
+        <addUniqueConstraint
+                tableName="bus_route_stops"
+                columnNames="route_id, stop_sequence"
+                constraintName="uk_bus_route_stop_sequence"/>
+    </changeSet>
 
 </databaseChangeLog>
