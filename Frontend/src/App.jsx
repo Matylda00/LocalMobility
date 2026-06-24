@@ -1,4 +1,5 @@
 import { useState } from "react";
+
 import {
   AppShell,
   Button,
@@ -10,19 +11,30 @@ import {
   TextInput,
   Title,
 } from "@mantine/core";
+
 import MapView from "./components/MapView";
-import TicketPurchaseModal from "./components/TicketPurchaseModal";
 import MyTicketsModal from "./components/MyTicketsModal";
+import ScheduleView from "./components/ScheduleView";
+import TicketPurchaseModal from "./components/TicketPurchaseModal";
 
 export default function App() {
   const [lineNumber, setLineNumber] = useState("");
+  const [mainView, setMainView] = useState("map");
   const [mapMode, setMapMode] = useState("buses");
+  const [scheduleInitialLine, setScheduleInitialLine] = useState("");
   const [isTicketPurchaseOpen, setIsTicketPurchaseOpen] = useState(false);
   const [isMyTicketsOpen, setIsMyTicketsOpen] = useState(false);
   const [ticketsRefreshKey, setTicketsRefreshKey] = useState(0);
 
   function handleSearch() {
-    console.log("Szukana linia:", lineNumber);
+    const cleanedLineNumber = lineNumber.trim();
+
+    if (!cleanedLineNumber) {
+      return;
+    }
+
+    setScheduleInitialLine(cleanedLineNumber);
+    setMainView("schedule");
   }
 
   function handleTicketBought() {
@@ -54,6 +66,25 @@ export default function App() {
         <AppShell.Navbar p="md">
           <Stack gap="md" h="100%">
             <div>
+              <Title order={4}>Widok</Title>
+              <Text size="sm" c="dimmed">
+                Przełącz mapę albo rozkład jazdy.
+              </Text>
+            </div>
+
+            <SegmentedControl
+              value={mainView}
+              onChange={setMainView}
+              data={[
+                { label: "Mapa", value: "map" },
+                { label: "Rozkład", value: "schedule" },
+              ]}
+              fullWidth
+            />
+
+            <Divider />
+
+            <div>
               <Title order={4}>Bilety</Title>
               <Text size="sm" c="dimmed">
                 Kup bilet albo sprawdź swoje aktywne bilety.
@@ -77,7 +108,7 @@ export default function App() {
             <div>
               <Title order={4}>Wyszukaj linię</Title>
               <Text size="sm" c="dimmed">
-                Wpisz numer linii autobusowej.
+                Wpisz numer linii autobusowej i otwórz jej rozkład.
               </Text>
             </div>
 
@@ -122,8 +153,8 @@ export default function App() {
                 {mapMode === "buses"
                   ? "autobusy"
                   : mapMode === "parking"
-                  ? "parkingi"
-                  : "rowery"}
+                    ? "parkingi"
+                    : "rowery"}
               </b>
             </Text>
 
@@ -139,7 +170,11 @@ export default function App() {
         </AppShell.Navbar>
 
         <AppShell.Main>
-          <MapView mapMode={mapMode} />
+          {mainView === "map" ? (
+            <MapView mapMode={mapMode} />
+          ) : (
+            <ScheduleView initialLineNumber={scheduleInitialLine} />
+          )}
         </AppShell.Main>
       </AppShell>
 
