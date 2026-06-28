@@ -25,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @AutoConfigureMockMvc(addFilters = false)
 @Transactional
-class BusScheduleControllerIntegrationTest {
+class BusScheduleIntegrationTest {
 
     private static final LocalDate ACTIVE_DATE = LocalDate.of(2026, 6, 22);
     private static final LocalDate INACTIVE_DATE = LocalDate.of(2026, 6, 23);
