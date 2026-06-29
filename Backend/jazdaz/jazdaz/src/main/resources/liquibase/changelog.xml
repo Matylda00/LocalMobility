@@ -311,5 +311,24 @@
 
 
     </changeSet>
+    <changeSet id="009-create-ticket-types" author="lucja">
+        <createTable tableName="ticket_types">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="price" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="duration_minutes" type="INTEGER"/>
+
+            <column name="ticket_category" type="VARCHAR(50)"/>
+        </createTable>
+    </changeSet>
 
 </databaseChangeLog>
