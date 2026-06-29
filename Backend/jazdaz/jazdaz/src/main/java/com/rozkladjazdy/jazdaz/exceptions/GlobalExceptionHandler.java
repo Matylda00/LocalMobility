@@ -27,4 +27,12 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.badRequest().build();
     }
+
+    @ExceptionHandler(ResourceExpiredException.class)
+    public ResponseEntity<Void> handleBadData(
+            ResourceExpiredException exception
+    ) {
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).build();
+    }
 }

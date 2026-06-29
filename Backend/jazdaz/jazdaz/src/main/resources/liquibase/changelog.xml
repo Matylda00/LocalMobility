@@ -330,5 +330,70 @@
             <column name="ticket_category" type="VARCHAR(50)"/>
         </createTable>
     </changeSet>
+    <changeSet id="010-create-tickets" author="lucja">
+        <createTable tableName="tickets">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="uuid" type="VARCHAR(36)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="ticket_type_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="qr_code" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+
+            <column name="purchase_date" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="valid_from" type="TIMESTAMP"/>
+
+            <column name="valid_to" type="TIMESTAMP"/>
+
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="tickets"
+                baseColumnNames="user_id"
+                referencedTableName="users"
+                referencedColumnNames="id"
+                constraintName="fk_tickets_users"/>
+
+        <addForeignKeyConstraint
+                baseTableName="tickets"
+                baseColumnNames="ticket_type_id"
+                referencedTableName="ticket_types"
+                referencedColumnNames="id"
+                constraintName="fk_tickets_ticket_types"/>
+
+        <createIndex tableName="tickets" indexName="idx_tickets_uuid">
+            <column name="uuid"/>
+        </createIndex>
+
+        <createIndex tableName="tickets" indexName="idx_tickets_user_id">
+            <column name="user_id"/>
+        </createIndex>
+
+        <createIndex tableName="tickets" indexName="idx_tickets_ticket_type_id">
+            <column name="ticket_type_id"/>
+        </createIndex>
+
+        <createIndex tableName="tickets" indexName="idx_tickets_status">
+            <column name="status"/>
+        </createIndex>
+    </changeSet>
 
 </databaseChangeLog>

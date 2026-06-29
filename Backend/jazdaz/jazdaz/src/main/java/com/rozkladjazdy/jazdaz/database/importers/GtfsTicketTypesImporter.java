@@ -69,13 +69,13 @@ public class GtfsTicketTypesImporter implements CommandLineRunner {
     }
 
     private void cleanTicketTypesTable() {
-        System.out.println("Cleaning ticket_types table...");
+        System.out.println("Cleaning tickets and ticket_types tables...");
 
         jdbcTemplate.execute("""
-                TRUNCATE TABLE ticket_types RESTART IDENTITY
-                """);
+            TRUNCATE TABLE tickets, ticket_types RESTART IDENTITY
+            """);
 
-        System.out.println("ticket_types table cleaned.");
+        System.out.println("tickets and ticket_types tables cleaned.");
     }
 
     private void importTicketTypes(Path fareAttributesFile) throws Exception {
