@@ -16,7 +16,7 @@ import ScheduleView from "./components/ScheduleView";
 import TicketPurchaseModal from "./components/TicketPurchaseModal";
 import AuthView from "./components/AuthView";
 import { clearAuth, getStoredAuth } from "./services/authService";
-
+import AdminEmailsButton from "./components/AdminEmailsButton";
 export default function App() {
   const [auth, setAuth] = useState(() => getStoredAuth());
 
@@ -123,7 +123,7 @@ export default function App() {
             >
               Moje bilety
             </Button>
-
+            <AdminEmailsButton />
             <Divider />
 
             <Stack gap={4}>
