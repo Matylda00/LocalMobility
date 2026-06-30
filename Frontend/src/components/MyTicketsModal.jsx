@@ -7,17 +7,14 @@ import {
   Center,
   Divider,
   Group,
+  Loader,
   Modal,
   Stack,
   Text,
   Title,
 } from "@mantine/core";
 import { QRCodeSVG } from "qrcode.react";
-import {
-  activateTicket,
-  getTickets,
-  removeTicket,
-} from "../services/ticketService";
+import { activateTicket, getTickets } from "../services/ticketService";
 
 function getTicketStatusLabel(status) {
   if (status === "inactive") {
@@ -32,12 +29,12 @@ function getTicketStatusLabel(status) {
     return "Wygasły";
   }
 
-  return status;
+  return "Nieznany";
 }
 
 function getTicketStatusColor(status) {
   if (status === "inactive") {
-    return "gray";
+    return "yellow";
   }
 
   if (status === "active") {
@@ -45,206 +42,290 @@ function getTicketStatusColor(status) {
   }
 
   if (status === "expired") {
-    return "red";
+    return "gray";
   }
 
   return "blue";
 }
 
-function formatDateTime(value) {
-  if (!value) {
+function getCategoryLabel(category) {
+  if (!category) {
+    return "Bilet";
+  }
+
+  const normalizedCategory = category.toLowerCase();
+
+  if (normalizedCategory === "normal") {
+    return "Normalny";
+  }
+
+  if (normalizedCategory === "reduced") {
+    return "Ulgowy";
+  }
+
+  return category;
+}
+
+function formatPrice(price) {
+  const numericPrice = Number(price);
+
+  if (!Number.isFinite(numericPrice)) {
+    return "Brak ceny";
+  }
+
+  return `${numericPrice.toFixed(2)} zł`;
+}
+
+function formatDuration(durationMinutes) {
+  const numericDuration = Number(durationMinutes);
+
+  if (!Number.isFinite(numericDuration)) {
+    return "Brak czasu ważności";
+  }
+
+  if (numericDuration < 60) {
+    return `${numericDuration} min`;
+  }
+
+  if (numericDuration % 1440 === 0) {
+    const days = numericDuration / 1440;
+    return days === 1 ? "24 godz." : `${days} dni`;
+  }
+
+  if (numericDuration % 60 === 0) {
+    return `${numericDuration / 60} godz.`;
+  }
+
+  return `${numericDuration} min`;
+}
+
+function formatDate(dateValue) {
+  if (!dateValue) {
     return "—";
   }
 
-  return new Date(value).toLocaleString("pl-PL", {
-    dateStyle: "short",
-    timeStyle: "short",
+  const date = new Date(dateValue);
+
+  if (Number.isNaN(date.getTime())) {
+    return "—";
+  }
+
+  return date.toLocaleString("pl-PL", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 
-function getRemainingTimeText(ticket) {
-  if (ticket.status !== "active") {
+function getRemainingTime(validTo) {
+  if (!validTo) {
     return "";
   }
 
-  const diffMs = new Date(ticket.validUntil).getTime() - Date.now();
+  const validToDate = new Date(validTo);
+  const remainingMilliseconds = validToDate.getTime() - Date.now();
 
-  if (diffMs <= 0) {
-    return "Bilet wygasł";
+  if (!Number.isFinite(remainingMilliseconds) || remainingMilliseconds <= 0) {
+    return "Bilet wygasł.";
   }
 
-  const diffMinutes = Math.floor(diffMs / 1000 / 60);
-  const diffSeconds = Math.floor((diffMs / 1000) % 60);
+  const remainingMinutes = Math.ceil(remainingMilliseconds / 60000);
 
-  return `${diffMinutes} min ${diffSeconds.toString().padStart(2, "0")} s`;
+  if (remainingMinutes < 60) {
+    return `Pozostało: ${remainingMinutes} min`;
+  }
+
+  const hours = Math.floor(remainingMinutes / 60);
+  const minutes = remainingMinutes % 60;
+
+  if (minutes === 0) {
+    return `Pozostało: ${hours} godz.`;
+  }
+
+  return `Pozostało: ${hours} godz. ${minutes} min`;
 }
 
 export default function MyTicketsModal({ opened, onClose, refreshKey }) {
   const [tickets, setTickets] = useState([]);
-  const [isLoadingTickets, setIsLoadingTickets] = useState(false);
-  const [ticketsError, setTicketsError] = useState("");
-
-  async function refreshTickets() {
-    setTicketsError("");
-    setIsLoadingTickets(true);
-
-    try {
-      const loadedTickets = await getTickets();
-      setTickets(loadedTickets);
-    } catch {
-      setTicketsError("Nie udało się pobrać biletów.");
-    } finally {
-      setIsLoadingTickets(false);
-    }
-  }
-
-  async function handleActivateTicket(ticketId) {
-    setTicketsError("");
-
-    try {
-      const updatedTickets = await activateTicket(ticketId);
-      setTickets(updatedTickets);
-    } catch {
-      setTicketsError("Nie udało się skasować biletu.");
-    }
-  }
-
-  async function handleRemoveTicket(ticketId) {
-    setTicketsError("");
-
-    try {
-      const updatedTickets = await removeTicket(ticketId);
-      setTickets(updatedTickets);
-    } catch {
-      setTicketsError("Nie udało się usunąć biletu.");
-    }
-  }
+  const [isLoading, setIsLoading] = useState(false);
+  const [activatingTicketUuid, setActivatingTicketUuid] = useState("");
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     if (!opened) {
       return;
     }
 
-    refreshTickets();
+    let isActive = true;
+
+    async function loadTickets(showLoader) {
+      if (showLoader) {
+        setIsLoading(true);
+      }
+
+      setError("");
+
+      try {
+        const loadedTickets = await getTickets();
+
+        if (isActive) {
+          setTickets(loadedTickets);
+        }
+      } catch (loadError) {
+        if (isActive) {
+          setError(loadError.message);
+        }
+      } finally {
+        if (isActive && showLoader) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    setMessage("");
+    loadTickets(true);
 
     const intervalId = setInterval(() => {
-      refreshTickets();
-    }, 1000);
+      loadTickets(false);
+    }, 10000);
 
     return () => {
+      isActive = false;
       clearInterval(intervalId);
     };
   }, [opened, refreshKey]);
 
+  async function handleActivateTicket(ticketUuid) {
+    setActivatingTicketUuid(ticketUuid);
+    setError("");
+    setMessage("");
+
+    try {
+      const activatedTicket = await activateTicket(ticketUuid);
+
+      setTickets((currentTickets) =>
+        currentTickets.map((ticket) =>
+          ticket.uuid === activatedTicket.uuid ? activatedTicket : ticket,
+        ),
+      );
+
+      setMessage("Bilet został skasowany i jest aktywny.");
+    } catch (activationError) {
+      setError(activationError.message);
+    } finally {
+      setActivatingTicketUuid("");
+    }
+  }
+
   return (
-    <Modal opened={opened} onClose={onClose} title="Moje bilety" size="lg" centered>
+    <Modal opened={opened} onClose={onClose} title="Moje bilety" size="xl" centered>
       <Stack gap="md">
-        {ticketsError && (
+        {error && (
           <Alert color="red" variant="light">
-            {ticketsError}
+            {error}
           </Alert>
         )}
 
-        {isLoadingTickets && tickets.length === 0 && (
+        {message && (
+          <Alert color="green" variant="light">
+            {message}
+          </Alert>
+        )}
+
+        {isLoading ? (
+          <Group justify="center" py="xl">
+            <Loader />
+          </Group>
+        ) : tickets.length === 0 ? (
           <Alert color="blue" variant="light">
-            Ładowanie biletów...
+            Nie masz jeszcze żadnych biletów.
           </Alert>
-        )}
-
-        {!isLoadingTickets && tickets.length === 0 && (
-          <Alert color="gray" variant="light">
-            Nie masz jeszcze żadnych biletów. Kliknij „Kup bilet”, żeby kupić
-            pierwszy bilet.
-          </Alert>
-        )}
-
-        {tickets.map((ticket) => {
-          const qrValue = `LOCALMOBILITY:TICKET:${ticket.id}`;
-
-          return (
-            <Card key={ticket.id} withBorder radius="md" padding="md">
+        ) : (
+          tickets.map((ticket) => (
+            <Card key={ticket.uuid} withBorder radius="md" shadow="xs">
               <Stack gap="sm">
                 <Group justify="space-between" align="flex-start">
-                  <div>
+                  <Stack gap={2}>
                     <Title order={4}>{ticket.name}</Title>
                     <Text size="sm" c="dimmed">
-                      Kupiono: {formatDateTime(ticket.purchasedAt)}
+                      {getCategoryLabel(ticket.ticketCategory)} •{" "}
+                      {formatDuration(ticket.durationMinutes)} •{" "}
+                      {formatPrice(ticket.price)}
                     </Text>
-                  </div>
+                  </Stack>
 
-                  <Badge color={getTicketStatusColor(ticket.status)}>
+                  <Badge color={getTicketStatusColor(ticket.status)} variant="light">
                     {getTicketStatusLabel(ticket.status)}
                   </Badge>
                 </Group>
 
                 <Divider />
 
-                <Group justify="space-between">
-                  <Text>Cena:</Text>
-                  <Text fw={700}>
-                    {ticket.price.toFixed(2)} {ticket.currency}
+                <Stack gap={4}>
+                  <Text size="sm">
+                    <strong>Kupiony:</strong> {formatDate(ticket.purchasedAt)}
                   </Text>
-                </Group>
 
-                <Group justify="space-between">
-                  <Text>Ważny od:</Text>
-                  <Text>{formatDateTime(ticket.validFrom)}</Text>
-                </Group>
+                  <Text size="sm">
+                    <strong>Ważny od:</strong> {formatDate(ticket.validFrom)}
+                  </Text>
 
-                <Group justify="space-between">
-                  <Text>Ważny do:</Text>
-                  <Text>{formatDateTime(ticket.validUntil)}</Text>
-                </Group>
+                  <Text size="sm">
+                    <strong>Ważny do:</strong> {formatDate(ticket.validTo)}
+                  </Text>
+
+                  <Text size="sm" c="dimmed">
+                    ID biletu: {ticket.uuid}
+                  </Text>
+                </Stack>
 
                 {ticket.status === "active" && (
-                  <>
-                    <Alert color="green" variant="light">
-                      Pozostało: <b>{getRemainingTimeText(ticket)}</b>
-                    </Alert>
-
-                    <Center>
-                      <Stack align="center" gap="xs">
-                        <QRCodeSVG value={qrValue} size={180} />
-                        <Text size="xs" c="dimmed">
-                          {qrValue}
-                        </Text>
-                      </Stack>
-                    </Center>
-                  </>
+                  <Alert color="green" variant="light">
+                    {getRemainingTime(ticket.validTo)}
+                  </Alert>
                 )}
 
                 {ticket.status === "inactive" && (
                   <Alert color="yellow" variant="light">
-                    Ten bilet jest kupiony, ale jeszcze nieskasowany. Po
-                    skasowaniu zacznie się jego czas ważności.
+                    Bilet nie jest jeszcze skasowany. Aktywuj go przed wejściem do
+                    autobusu.
                   </Alert>
                 )}
 
                 {ticket.status === "expired" && (
-                  <Alert color="red" variant="light">
-                    Ten bilet wygasł i nie może być użyty do przejazdu.
+                  <Alert color="gray" variant="light">
+                    Ten bilet wygasł.
                   </Alert>
                 )}
 
-                <Group justify="flex-end">
-                  {ticket.status === "inactive" && (
-                    <Button onClick={() => handleActivateTicket(ticket.id)}>
+                {ticket.status === "active" && ticket.qrCode && (
+                  <Center py="md">
+                    <Stack align="center" gap="xs">
+                      <QRCodeSVG value={ticket.qrCode} size={180} />
+                      <Text size="xs" c="dimmed" ta="center">
+                        Kod QR biletu
+                      </Text>
+                    </Stack>
+                  </Center>
+                )}
+
+                {ticket.status === "inactive" && (
+                  <Group justify="flex-end">
+                    <Button
+                      onClick={() => handleActivateTicket(ticket.uuid)}
+                      loading={activatingTicketUuid === ticket.uuid}
+                    >
                       Skasuj bilet
                     </Button>
-                  )}
-
-                  <Button
-                    color="red"
-                    variant="light"
-                    onClick={() => handleRemoveTicket(ticket.id)}
-                  >
-                    Usuń
-                  </Button>
-                </Group>
+                  </Group>
+                )}
               </Stack>
             </Card>
-          );
-        })}
+          ))
+        )}
       </Stack>
     </Modal>
   );

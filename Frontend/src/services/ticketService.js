@@ -1,142 +1,182 @@
-const TICKETS_STORAGE_KEY = "localmobility_tickets";
+import { authFetch } from "./authService";
 
-export const TICKET_TYPES = [
-  {
-    id: "ticket-20-normal",
-    name: "Bilet 20-minutowy normalny",
-    durationMinutes: 20,
-    price: 4.0,
-  },
-  {
-    id: "ticket-20-reduced",
-    name: "Bilet 20-minutowy ulgowy",
-    durationMinutes: 20,
-    price: 2.0,
-  },
-  {
-    id: "ticket-60-normal",
-    name: "Bilet 60-minutowy normalny",
-    durationMinutes: 60,
-    price: 6.0,
-  },
-  {
-    id: "ticket-60-reduced",
-    name: "Bilet 60-minutowy ulgowy",
-    durationMinutes: 60,
-    price: 3.0,
-  },
-  {
-    id: "ticket-24h-normal",
-    name: "Bilet 24-godzinny normalny",
-    durationMinutes: 24 * 60,
-    price: 17.0,
-  },
-];
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
 
-function readTicketsFromStorage() {
-  const rawTickets = localStorage.getItem(TICKETS_STORAGE_KEY);
+function buildUrl(path) {
+  return `${API_BASE_URL}${path}`;
+}
 
-  if (!rawTickets) {
-    return [];
+function normalizePrice(price) {
+  const numericPrice = Number(price);
+
+  if (!Number.isFinite(numericPrice)) {
+    return null;
   }
+
+  return numericPrice;
+}
+
+function normalizeDuration(durationMinutes) {
+  const numericDuration = Number(durationMinutes);
+
+  if (!Number.isFinite(numericDuration)) {
+    return null;
+  }
+
+  return numericDuration;
+}
+
+function normalizeStatus(status) {
+  if (!status) {
+    return "unknown";
+  }
+
+  return String(status).toLowerCase();
+}
+
+function normalizeTicketType(ticketType) {
+  return {
+    key: `${ticketType.name}__${ticketType.ticketCategory}`,
+    name: ticketType.name,
+    price: normalizePrice(ticketType.price),
+    durationMinutes: normalizeDuration(ticketType.durationMinutes),
+    ticketCategory: ticketType.ticketCategory,
+  };
+}
+
+function normalizeTicket(ticket) {
+  const normalizedStatus = normalizeStatus(ticket.status);
+
+  return {
+    id: ticket.uuid,
+    uuid: ticket.uuid,
+    name: ticket.name,
+    price: normalizePrice(ticket.price),
+    durationMinutes: normalizeDuration(ticket.durationMinutes),
+    ticketCategory: ticket.ticketCategory,
+    status: normalizedStatus,
+    purchasedAt: ticket.purchasedAt,
+    validFrom: ticket.validFrom,
+    validTo: ticket.validTo,
+    qrCode: ticket.qrCode,
+  };
+}
+
+async function readJsonResponse(response, fallbackMessage) {
+  let data = null;
 
   try {
-    return JSON.parse(rawTickets);
+    data = await response.json();
   } catch {
-    return [];
-  }
-}
-
-function saveTicketsToStorage(tickets) {
-  localStorage.setItem(TICKETS_STORAGE_KEY, JSON.stringify(tickets));
-}
-
-function normalizeTicketStatus(ticket) {
-  if (ticket.status !== "active") {
-    return ticket;
+    data = null;
   }
 
-  const validUntil = new Date(ticket.validUntil).getTime();
-  const now = Date.now();
+  if (!response.ok) {
+    if (response.status === 400) {
+      throw new Error("Sprawdź dane i spróbuj ponownie.");
+    }
 
-  if (validUntil < now) {
-    return {
-      ...ticket,
-      status: "expired",
-    };
+    if (response.status === 401 || response.status === 403) {
+      throw new Error("Sesja wygasła. Zaloguj się ponownie.");
+    }
+
+    if (response.status === 404) {
+      throw new Error("Nie znaleziono wybranego biletu.");
+    }
+
+    if (response.status === 410) {
+      throw new Error("Tego biletu nie można już aktywować.");
+    }
+
+    throw new Error(fallbackMessage);
   }
 
-  return ticket;
+  return data;
 }
 
 export async function getTicketTypes() {
-  return TICKET_TYPES;
+  let response;
+
+  try {
+    response = await authFetch(buildUrl("/api/ticket-types"));
+  } catch {
+    throw new Error("Nie udało się pobrać dostępnych biletów.");
+  }
+
+  const data = await readJsonResponse(
+    response,
+    "Nie udało się pobrać dostępnych biletów.",
+  );
+
+  const ticketTypes = Array.isArray(data?.ticketTypes) ? data.ticketTypes : [];
+
+  return ticketTypes.map(normalizeTicketType);
 }
 
 export async function getTickets() {
-  const tickets = readTicketsFromStorage().map(normalizeTicketStatus);
-  saveTicketsToStorage(tickets);
+  let response;
 
-  return tickets;
+  try {
+    response = await authFetch(buildUrl("/api/tickets"));
+  } catch {
+    throw new Error("Nie udało się pobrać Twoich biletów.");
+  }
+
+  const data = await readJsonResponse(
+    response,
+    "Nie udało się pobrać Twoich biletów.",
+  );
+
+  const tickets = Array.isArray(data?.tickets) ? data.tickets : [];
+
+  return tickets.map(normalizeTicket);
 }
 
-export async function createTicket(ticketType, paymentResult) {
-  const ticket = {
-    id: crypto.randomUUID(),
-    typeId: ticketType.id,
-    name: ticketType.name,
-    durationMinutes: ticketType.durationMinutes,
-    price: ticketType.price,
-    currency: "PLN",
-    status: "inactive",
-    purchasedAt: new Date().toISOString(),
-    validFrom: null,
-    validUntil: null,
-    transactionId: paymentResult.transactionId,
-  };
+export async function purchaseTicket(ticketType, paymentData) {
+  let response;
 
-  const tickets = await getTickets();
-  const updatedTickets = [ticket, ...tickets];
+  try {
+    response = await authFetch(buildUrl("/api/tickets/purchase"), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        ticketName: ticketType.name,
+        ticketCategory: ticketType.ticketCategory,
+        cardNumber: paymentData.cardNumber,
+        expiryDate: paymentData.expiryDate,
+        cvv: paymentData.cvv,
+        cardHolder: paymentData.cardHolder,
+      }),
+    });
+  } catch {
+    throw new Error("Nie udało się kupić biletu. Spróbuj ponownie.");
+  }
 
-  saveTicketsToStorage(updatedTickets);
+  const data = await readJsonResponse(
+    response,
+    "Nie udało się kupić biletu. Spróbuj ponownie.",
+  );
 
-  return ticket;
+  return normalizeTicket(data);
 }
 
-export async function activateTicket(ticketId) {
-  const now = new Date();
+export async function activateTicket(ticketUuid) {
+  let response;
 
-  const tickets = await getTickets();
+  try {
+    response = await authFetch(buildUrl(`/api/tickets/${ticketUuid}/activate`), {
+      method: "POST",
+    });
+  } catch {
+    throw new Error("Nie udało się skasować biletu. Spróbuj ponownie.");
+  }
 
-  const updatedTickets = tickets.map((ticket) => {
-    if (ticket.id !== ticketId) {
-      return ticket;
-    }
+  const data = await readJsonResponse(
+    response,
+    "Nie udało się skasować biletu. Spróbuj ponownie.",
+  );
 
-    if (ticket.status !== "inactive") {
-      return ticket;
-    }
-
-    return {
-      ...ticket,
-      status: "active",
-      validFrom: now.toISOString(),
-      validUntil: new Date(
-        now.getTime() + ticket.durationMinutes * 60 * 1000
-      ).toISOString(),
-    };
-  });
-
-  saveTicketsToStorage(updatedTickets);
-
-  return updatedTickets;
-}
-
-export async function removeTicket(ticketId) {
-  const tickets = await getTickets();
-  const updatedTickets = tickets.filter((ticket) => ticket.id !== ticketId);
-
-  saveTicketsToStorage(updatedTickets);
-
-  return updatedTickets;
+  return normalizeTicket(data);
 }

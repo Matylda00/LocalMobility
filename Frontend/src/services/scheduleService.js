@@ -1,3 +1,4 @@
+import { authFetch } from "./authService";
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
 
 class ScheduleApiError extends Error {
@@ -23,36 +24,32 @@ async function requestJson(path, params, messages = {}) {
   let response;
 
   try {
-    response = await fetch(buildUrl(path, params));
+    response = await authFetch(buildUrl(path, params));
   } catch {
     throw new ScheduleApiError(
-      messages.connection ||
-        "Nie udało się połączyć z serwerem. Sprawdź, czy backend jest uruchomiony."
+      messages.network ?? "Nie udało się połączyć z serwerem rozkładów.",
     );
   }
 
   if (!response.ok) {
-    if (response.status === 404) {
+    if (response.status === 401 || response.status === 403) {
       throw new ScheduleApiError(
-        messages.notFound ||
-          "Nie znaleziono rozkładu dla wybranych danych."
-      );
-    }
-
-    if (response.status >= 500) {
-      throw new ScheduleApiError(
-        messages.server ||
-          "Rozkład jest teraz niedostępny. Spróbuj ponownie za chwilę."
+        "Sesja wygasła albo dane logowania są nieprawidłowe. Wyloguj się i zaloguj ponownie.",
       );
     }
 
     throw new ScheduleApiError(
-      messages.default ||
-        "Nie udało się pobrać rozkładu. Zmień dane i spróbuj ponownie."
+      messages.status ?? "Serwer nie zwrócił danych rozkładu.",
     );
   }
 
-  return response.json();
+  try {
+    return await response.json();
+  } catch {
+    throw new ScheduleApiError(
+      messages.parse ?? "Nie udało się odczytać odpowiedzi serwera.",
+    );
+  }
 }
 
 export async function getBusLines() {

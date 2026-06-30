@@ -1,5 +1,4 @@
 import { useState } from "react";
-
 import {
   AppShell,
   Button,
@@ -11,13 +10,16 @@ import {
   TextInput,
   Title,
 } from "@mantine/core";
-
 import MapView from "./components/MapView";
 import MyTicketsModal from "./components/MyTicketsModal";
 import ScheduleView from "./components/ScheduleView";
 import TicketPurchaseModal from "./components/TicketPurchaseModal";
+import AuthView from "./components/AuthView";
+import { clearAuth, getStoredAuth } from "./services/authService";
 
 export default function App() {
+  const [auth, setAuth] = useState(() => getStoredAuth());
+
   const [lineNumber, setLineNumber] = useState("");
   const [mainView, setMainView] = useState("map");
   const [mapMode, setMapMode] = useState("buses");
@@ -42,61 +44,80 @@ export default function App() {
   }
 
   function handleLogout() {
-    console.log("Wyloguj się");
+    clearAuth();
+    setAuth(null);
+    setIsTicketPurchaseOpen(false);
+    setIsMyTicketsOpen(false);
+  }
+
+  if (!auth) {
+    return <AuthView onAuthenticated={setAuth} />;
   }
 
   return (
     <>
       <AppShell
-        header={{ height: 72 }}
-        navbar={{ width: 300, breakpoint: "sm" }}
         padding="md"
+        header={{ height: 72 }}
+        navbar={{
+          width: 320,
+          breakpoint: "sm",
+        }}
       >
         <AppShell.Header>
           <Group h="100%" px="md" justify="space-between">
             <div>
-              <Title order={2}>Bus App</Title>
+              <Title order={3}>LocalMobility</Title>
               <Text size="sm" c="dimmed">
                 Transport miejski w czasie rzeczywistym
               </Text>
             </div>
+
+            <Group gap="sm">
+              <Text size="sm" c="dimmed">
+                Zalogowano jako <strong>{auth.email}</strong>
+              </Text>
+
+              <Button variant="subtle" color="red" onClick={handleLogout}>
+                Wyloguj się
+              </Button>
+            </Group>
           </Group>
         </AppShell.Header>
 
         <AppShell.Navbar p="md">
-          <Stack gap="md" h="100%">
-            <div>
+          <Stack gap="md">
+            <Stack gap={4}>
               <Title order={4}>Widok</Title>
               <Text size="sm" c="dimmed">
                 Przełącz mapę albo rozkład jazdy.
               </Text>
-            </div>
+            </Stack>
 
             <SegmentedControl
+              fullWidth
               value={mainView}
               onChange={setMainView}
               data={[
-                { label: "Mapa", value: "map" },
-                { label: "Rozkład", value: "schedule" },
+                { value: "map", label: "Mapa" },
+                { value: "schedule", label: "Rozkład" },
               ]}
-              fullWidth
             />
 
             <Divider />
 
-            <div>
+            <Stack gap={4}>
               <Title order={4}>Bilety</Title>
               <Text size="sm" c="dimmed">
                 Kup bilet albo sprawdź swoje aktywne bilety.
               </Text>
-            </div>
+            </Stack>
 
-            <Button fullWidth onClick={() => setIsTicketPurchaseOpen(true)}>
+            <Button onClick={() => setIsTicketPurchaseOpen(true)}>
               Kup bilet
             </Button>
 
             <Button
-              fullWidth
               variant="light"
               onClick={() => setIsMyTicketsOpen(true)}
             >
@@ -105,17 +126,17 @@ export default function App() {
 
             <Divider />
 
-            <div>
+            <Stack gap={4}>
               <Title order={4}>Wyszukaj linię</Title>
               <Text size="sm" c="dimmed">
                 Wpisz numer linii autobusowej i otwórz jej rozkład.
               </Text>
-            </div>
+            </Stack>
 
-            <Group gap="sm" align="flex-end">
+            <Group align="end" gap="xs">
               <TextInput
                 label="Numer linii"
-                placeholder="np. 152"
+                placeholder="np. 175"
                 value={lineNumber}
                 onChange={(event) => setLineNumber(event.currentTarget.value)}
                 size="md"
@@ -126,46 +147,38 @@ export default function App() {
               <Button onClick={handleSearch}>Szukaj</Button>
             </Group>
 
-            <Divider />
+            {mainView === "map" && (
+              <>
+                <Divider />
 
-            <div>
-              <Title order={4}>Tryb mapy</Title>
-              <Text size="sm" c="dimmed">
-                Wybierz, co chcesz zobaczyć na mapie.
-              </Text>
-            </div>
+                <Stack gap={4}>
+                  <Title order={4}>Tryb mapy</Title>
+                  <Text size="sm" c="dimmed">
+                    Wybierz, co chcesz zobaczyć na mapie.
+                  </Text>
+                </Stack>
 
-            <SegmentedControl
-              value={mapMode}
-              onChange={setMapMode}
-              data={[
-                { label: "Autobusy", value: "buses" },
-                { label: "Parkingi", value: "parking" },
-                { label: "Rowery", value: "bikes" },
-              ]}
-              orientation="vertical"
-              fullWidth
-            />
+                <SegmentedControl
+                  fullWidth
+                  value={mapMode}
+                  onChange={setMapMode}
+                  data={[
+                    { value: "buses", label: "Autobusy" },
+                    { value: "parking", label: "Parkingi" },
+                    { value: "bikes", label: "Rowery" },
+                  ]}
+                />
 
-            <Text size="sm">
-              Wybrano:{" "}
-              <b>
-                {mapMode === "buses"
-                  ? "autobusy"
-                  : mapMode === "parking"
-                    ? "parkingi"
-                    : "rowery"}
-              </b>
-            </Text>
-
-            <Button
-              color="red"
-              variant="light"
-              mt="auto"
-              onClick={handleLogout}
-            >
-              Wyloguj się
-            </Button>
+                <Text size="sm" c="dimmed">
+                  Wybrano:{" "}
+                  {mapMode === "buses"
+                    ? "autobusy"
+                    : mapMode === "parking"
+                      ? "parkingi"
+                      : "rowery"}
+                </Text>
+              </>
+            )}
           </Stack>
         </AppShell.Navbar>
 
